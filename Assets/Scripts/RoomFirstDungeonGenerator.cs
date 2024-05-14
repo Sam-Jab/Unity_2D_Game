@@ -78,6 +78,25 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
         }
         return corridors;
     }
+//     private HashSet<Vector2Int> ConnectRooms(List<Vector2Int> roomCenters)
+//     {
+//     HashSet<Vector2Int> corridors = new HashSet<Vector2Int>();
+//     List<Vector2Int> remainingRoomCenters = new List<Vector2Int>(roomCenters); // Create a copy of the roomCenters list
+
+//     var currentRoomCenter = remainingRoomCenters[Random.Range(0, remainingRoomCenters.Count)];
+//     remainingRoomCenters.Remove(currentRoomCenter);
+
+//     while (remainingRoomCenters.Count > 0)
+//     {
+//         Vector2Int closest = FindClosestPointTo(currentRoomCenter, remainingRoomCenters);
+//         remainingRoomCenters.Remove(closest);
+//         HashSet<Vector2Int> newCorridor = CreateCorridor(currentRoomCenter, closest);
+//         currentRoomCenter = closest;
+//         corridors.UnionWith(newCorridor);
+//     }
+//     return corridors;
+// }
+
 
     private HashSet<Vector2Int> CreateCorridor(Vector2Int currentRoomCenter, Vector2Int destination)
     {
