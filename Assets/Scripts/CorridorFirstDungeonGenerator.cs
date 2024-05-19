@@ -98,14 +98,6 @@ public class CorridorFirstDungeonGenerator : SimpleRandomWalkMapGenerator
             GameObject gameObject1 = Instantiate(itemPrefab, itemPosition.Value, Quaternion.identity);
             instantiatedItems.Add(gameObject1);
         }
-
-        if (itemPosition1 != null)
-        {
-            // Instantiate item GameObject at itemPosition.Value
-            GameObject itemPrefab = itemPrefabs[UnityEngine.Random.Range(0, itemPrefabs.Length)];
-            GameObject gameObject1 = Instantiate(itemPrefab, itemPosition.Value, Quaternion.identity);
-            instantiatedItems.Add(gameObject1);
-        }
     }
 
 //     private void PlaceItems()

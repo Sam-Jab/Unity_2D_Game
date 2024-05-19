@@ -7,6 +7,19 @@ using System;
 
 public class ItemPlacementHelper 
 {
+    private static ItemPlacementHelper instance;
+
+    // public static ItemPlacementHelper Instance
+    // {
+    //     get
+    //     {
+    //         if (instance == null)
+    //         {
+    //             instance = new ItemPlacementHelper();
+    //         }
+    //         return instance;
+    //     }
+    // }
     Dictionary<PlacementType , HashSet<Vector2Int>> tileByType = new Dictionary<PlacementType, HashSet<Vector2Int>>() ; 
 
     HashSet<Vector2Int> roomFloorNoCorridor ; 
@@ -115,6 +128,28 @@ public class ItemPlacementHelper
         }
         return (true , positions) ;
     }
+
+    public List<Vector2?> GetMultipleItemPlacementPositions(PlacementType placementType, int itemCount, int iterationsMax, Vector2Int size, bool addOffset)
+    {
+        List<Vector2?> itemPositions = new List<Vector2?>();
+
+        for (int i = 0; i < itemCount; i++)
+        {
+            Vector2? itemPosition = GetItemPlacementPosition(placementType, iterationsMax, size, addOffset);
+            if (itemPosition != null)
+            {
+                itemPositions.Add(itemPosition.Value);
+            }
+            else
+            {
+                Debug.LogWarning("Failed to find a valid position for item placement.");
+            }
+        }
+
+        return itemPositions;
+    }
+
+    
 }
 
 

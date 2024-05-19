@@ -2,7 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Random = UnityEngine.Random ; 
+using Random = UnityEngine.Random ;
+using UnityEngine.Tilemaps;
 
 public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
 {
@@ -15,14 +16,45 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
     private int offset = 1 ; 
     [SerializeField]
     private bool randomWalkRooms = false ; 
+
+    [SerializeField]
+    private GameObject playerPrefab ; 
+    [SerializeField]
+    private GameObject enemyPrefab ; 
+
+    [SerializeField]
+    private GameObject coinPrefab ; 
+
+    [SerializeField]
+    private int numberOfCoins = 10 ; 
+
+    [SerializeField]
+    private int numberOfEnemies = 5 ; 
+
+     [SerializeField]
+    public GameObject[] itemPrefabs;
+
+    private List<GameObject> instantiatedItems = new List<GameObject>();
+    private HashSet<Vector2Int> floor , corridors ; 
+    
+    private ItemPlacementHelper itemPlacementHelper; 
+
+    
     protected override void RunProceduralGeneration()
     {
-        CreateRooms() ; 
+        DestroyItems() ; 
+        CreateRooms() ;  
+        PlaceItems(playerPrefab) ; 
+        PlaceEnemies() ; 
+        PlaceCoins() ; 
     }
+
     private void CreateRooms(){
-        var roomsList = ProceduralGenerationAlgorithmes.BinarySpacePartitioning(new BoundsInt((Vector3Int)startPosition 
+        List<BoundsInt> roomsList = ProceduralGenerationAlgorithmes.BinarySpacePartitioning(new BoundsInt((Vector3Int)startPosition 
         , new Vector3Int(dungeonWidth , dungeonHeight , 0  )) , minRoomWidth , minRoomHeight) ;
+
         HashSet<Vector2Int> floor = new HashSet<Vector2Int>() ; 
+        
         if(randomWalkRooms){
             floor = CreateRoomsRandomly(roomsList) ; 
         }
@@ -31,21 +63,92 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
             floor = CreateSimpleRooms(roomsList) ; 
         } 
         List<Vector2Int> roomCenters = new List<Vector2Int>() ;  
-        foreach(var room in roomsList )
+        foreach (var room in roomsList)
         {
-            roomCenters.Add((Vector2Int)Vector3Int.RoundToInt(room.center)) ; 
+        var roomCenter = (Vector2Int)Vector3Int.RoundToInt(room.center);
+            roomCenters.Add(roomCenter);
+            Debug.Log("Room center: " + roomCenter);
+        }
+        if (roomCenters.Count == 0)
+        {
+            Debug.LogError("No rooms created. Check your room generation parameters.");
+            return;
         }
 
-        HashSet<Vector2Int> corridors = ConnectRooms(roomCenters) ; 
-        floor.UnionWith(corridors) ; 
+        // Make a copy of roomCenters for use in corridor generation
+        List<Vector2Int> roomCentersForCorridors = new List<Vector2Int>(roomCenters);
 
+        HashSet<Vector2Int> corridors = ConnectRooms(roomCentersForCorridors) ; 
+        floor.UnionWith(corridors) ; 
+        
         tileMapVisualizer.PaintFloorTiles(floor) ; 
         WallGenerator.CreateWalls(floor , tileMapVisualizer) ; 
+        // PlaceEnemies(roomCenters) ;  
+        itemPlacementHelper = new ItemPlacementHelper(floor, corridors);
+
+    }
+
+
+    private void PlaceEnemies()
+    { 
+
+        for (int i = 0; i < numberOfEnemies; i++)
+        {
+        PlaceItems(enemyPrefab) ; 
+        }
+    }
+
+    private void PlaceCoins()
+    { 
+
+        for (int i = 0; i < numberOfCoins; i++)
+        {
+        PlaceItems(coinPrefab) ; 
+        }
+    }
+
+
+    private void DestroyItems()
+    {
+        foreach (GameObject item in instantiatedItems)
+        {
+            DestroyImmediate(item , true) ; 
+            // Destroy(item);
+        }
+        instantiatedItems.Clear(); // Clear the list after destroying items
+    }
+    private void PlaceItems(GameObject obj )
+    {
+        // Ensure itemPlacementHelper is initialized
+        if (itemPlacementHelper == null)
+        {
+            itemPlacementHelper = new ItemPlacementHelper(floor, corridors);
+        }
+
+        // Example: Place item of type PlacementType.OpenSpace
+        Vector2? itemPosition = itemPlacementHelper.GetItemPlacementPosition(PlacementType.OpenSpace, 100, new Vector2Int(1, 1), false);
+
+        if (itemPosition != null)
+        {
+            // Instantiate item GameObject at itemPosition.Value
+            // GameObject itemPrefab = itemPrefabs[UnityEngine.Random.Range(0, itemPrefabs.Length)];
+            GameObject gameObject1 = Instantiate(obj, itemPosition.Value, Quaternion.identity);
+            instantiatedItems.Add(gameObject1);
+        }
+
+        // if (itemPosition1 != null)
+        // {
+        //     // Instantiate item GameObject at itemPosition.Value
+        //     GameObject itemPrefab = itemPrefabs[UnityEngine.Random.Range(0, itemPrefabs.Length)];
+        //     GameObject gameObject2 = Instantiate(itemPrefab, itemPosition.Value, Quaternion.identity);
+        //     instantiatedItems.Add(gameObject2);
+        // }
     }
 
     private HashSet<Vector2Int> CreateRoomsRandomly(List<BoundsInt> roomsList)
     {
         HashSet<Vector2Int> floor = new HashSet<Vector2Int>();
+        // List<Vector2Int> floors = new List<Vector2Int>() ;  
         for (int i = 0; i < roomsList.Count; i++)
         {
             var roomBounds = roomsList[i];
@@ -56,9 +159,11 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
                 if(position.x >= (roomBounds.xMin + offset) && position.x <= (roomBounds.xMax - offset) && position.y >= (roomBounds.yMin - offset) && position.y <= (roomBounds.yMax - offset))
                 {
                     floor.Add(position);
+                    // floors.Add(position) ; 
                 }
             }
         }
+        // PlaceEnemies(floors) ; 
         return floor ; 
     }
 
@@ -75,29 +180,10 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
             HashSet<Vector2Int> newCorridor = CreateCorridor(currentRoomCenter, closest);
             currentRoomCenter = closest;
             corridors.UnionWith(newCorridor);
+            
         }
         return corridors;
     }
-//     private HashSet<Vector2Int> ConnectRooms(List<Vector2Int> roomCenters)
-//     {
-//     HashSet<Vector2Int> corridors = new HashSet<Vector2Int>();
-//     List<Vector2Int> remainingRoomCenters = new List<Vector2Int>(roomCenters); // Create a copy of the roomCenters list
-
-//     var currentRoomCenter = remainingRoomCenters[Random.Range(0, remainingRoomCenters.Count)];
-//     remainingRoomCenters.Remove(currentRoomCenter);
-
-//     while (remainingRoomCenters.Count > 0)
-//     {
-//         Vector2Int closest = FindClosestPointTo(currentRoomCenter, remainingRoomCenters);
-//         remainingRoomCenters.Remove(closest);
-//         HashSet<Vector2Int> newCorridor = CreateCorridor(currentRoomCenter, closest);
-//         currentRoomCenter = closest;
-//         corridors.UnionWith(newCorridor);
-//     }
-//     return corridors;
-// }
-
-
     private HashSet<Vector2Int> CreateCorridor(Vector2Int currentRoomCenter, Vector2Int destination)
     {
         HashSet<Vector2Int> corridor = new HashSet<Vector2Int>();
