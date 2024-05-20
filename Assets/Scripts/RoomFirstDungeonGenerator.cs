@@ -25,12 +25,6 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
     [SerializeField]
     private GameObject coinPrefab ; 
 
-    [SerializeField]
-    private int numberOfCoins = 10 ; 
-
-    [SerializeField]
-    private int numberOfEnemies = 5 ; 
-
      [SerializeField]
     public GameObject[] itemPrefabs;
 
@@ -42,14 +36,16 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
     
     protected override void RunProceduralGeneration()
     {
-        DestroyItems() ; 
+        // DestroyItems() ;  
         CreateRooms() ;  
-        PlaceItems(playerPrefab) ; 
-        PlaceEnemies() ; 
-        PlaceCoins() ; 
+       
+        PlacePlayer(playerPrefab) ; 
+        // PlaceEnemies() ; 
+        // PlaceCoins() ; 
     }
 
     private void CreateRooms(){
+
         List<BoundsInt> roomsList = ProceduralGenerationAlgorithmes.BinarySpacePartitioning(new BoundsInt((Vector3Int)startPosition 
         , new Vector3Int(dungeonWidth , dungeonHeight , 0  )) , minRoomWidth , minRoomHeight) ;
 
@@ -67,7 +63,7 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
         {
         var roomCenter = (Vector2Int)Vector3Int.RoundToInt(room.center);
             roomCenters.Add(roomCenter);
-            Debug.Log("Room center: " + roomCenter);
+            // Debug.Log("Room center: " + roomCenter);
         }
         if (roomCenters.Count == 0)
         {
@@ -83,39 +79,69 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
         
         tileMapVisualizer.PaintFloorTiles(floor) ; 
         WallGenerator.CreateWalls(floor , tileMapVisualizer) ; 
+        DestroyItems() ; 
         // PlaceEnemies(roomCenters) ;  
         itemPlacementHelper = new ItemPlacementHelper(floor, corridors);
+        PlaceEnemies(roomCenters) ; 
+        PlaceCoins(roomCenters) ;
 
     }
 
 
-    private void PlaceEnemies()
+    private void PlaceEnemies(List<Vector2Int> roomCenters)
     { 
+        int  n = roomCenters.Count ;  
 
-        for (int i = 0; i < numberOfEnemies; i++)
+        for (int i = 0; i < n ; i++)
         {
         PlaceItems(enemyPrefab) ; 
         }
     }
 
-    private void PlaceCoins()
+    private void PlaceCoins(List<Vector2Int> roomCenters)
     { 
+        int n = roomCenters.Count * 2  ; 
 
-        for (int i = 0; i < numberOfCoins; i++)
+        for (int i = 0; i < n ; i++)
         {
         PlaceItems(coinPrefab) ; 
         }
     }
 
 
-    private void DestroyItems()
+    public void DestroyItems()
     {
         foreach (GameObject item in instantiatedItems)
         {
-            DestroyImmediate(item , true) ; 
-            // Destroy(item);
+            
+            //if(!playerPrefab)
+            // Debug.LogWarning("lopp"+i);
+            Destroy(item);
+
+            // DestroyImmediate(item , true) ; 
+
+            
         }
+        
         instantiatedItems.Clear(); // Clear the list after destroying items
+    }
+
+    private void PlacePlayer(GameObject player)
+    {
+        // Ensure itemPlacementHelper is initialized
+        if (itemPlacementHelper == null)
+        {
+            itemPlacementHelper = new ItemPlacementHelper(floor, corridors);
+        }
+
+        // Example: Place item of type PlacementType.OpenSpace
+        Vector2? itemPosition = itemPlacementHelper.GetItemPlacementPosition(PlacementType.OpenSpace, 100, new Vector2Int(1, 1), false);
+
+        if (itemPosition != null && player != null)
+        {
+            player.transform.position = itemPosition.Value ;  
+            //instantiatedItems.Add(player);
+        }
     }
     private void PlaceItems(GameObject obj )
     {

@@ -5,25 +5,26 @@ using UnityEngine;
 
 public class CoinManager : MonoBehaviour
 {
-    public static CoinManager Instance ; 
-    private int coins ; 
+    public static CoinManager Instance;
+    private int coins;
     [SerializeField]
-    private TMP_Text coinDisplay ; 
+    private TMP_Text coinDisplay;
 
     public void Awake()
     {
-        if(!Instance)
+        if (!Instance)
         {
-            Instance = this ; 
+            Instance = this;
         }
-    } 
+    }
 
     private void OnGUI()
     {
-        coinDisplay.text = coins.ToString() ; 
+        coinDisplay.text = coins.ToString();
     }
 
-    public void ChangeCoins(int amount ){
-        coins += amount ; 
+    public void ChangeCoins(int amount)
+    {
+        coins += amount;
     }
 }

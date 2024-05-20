@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
+
+    // public PlayerControler player ; 
+    public int damage = 1;
      Animator animator;
 
     public float Health {
@@ -33,4 +36,26 @@ public class Enemy : MonoBehaviour
     public void RemoveEnemy() {
         Destroy(gameObject);
     }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        // Check if the collided object has a PlayerHealth component
+        PlayerControler player = collision.gameObject.GetComponent<PlayerControler>();
+        if (player != null)
+        {
+            // Apply damage to the player
+            player.TakeDamage(damage);
+        }
+    }
+    //  private  void OnTriggerEnter2D(Collider2D other)
+    // {
+    //     if(other.tag == "Player" ){
+    //         //Deal Damage to the Player 
+    //         PlayerControler player = other.GetComponent<PlayerControler>() ; 
+    //         if(player != null){
+    //             player.TakeDamage(damage) ; 
+    //         }
+    //     }
+    // }
+
 }

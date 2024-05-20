@@ -8,7 +8,7 @@ public class SwordAttack : MonoBehaviour
     public float damage = 3 ; 
     public Vector2 RightAttackOffset ; 
     private void Start(){
-        // swordCollider = GetComponent<Collider2D>() ; 
+        swordCollider = GetComponent<Collider2D>() ; 
         RightAttackOffset = transform.localPosition ;  
     }
     public void AttackRight() {
