@@ -22,7 +22,7 @@ public class PlayerControler : MonoBehaviour
     // Start is called before the first frame update
     // private HealthManager healthManager;
 
-    public RoomFirstDungeonGenerator obj;
+    public AbstractDungeonGenerator obj;
     void Start()
     {
         // healthManager = HealthManager.Instance;
@@ -38,20 +38,25 @@ public class PlayerControler : MonoBehaviour
         // healthManager.ChangeCoins(damage);
         if (currentHealth <= 0)
         {
-            obj.DestroyItems();
-
-            Die();
+            animator.SetTrigger("Death");
+            // StartWaiting() ; 
+            // obj.DestroyItems();
         }
     }
-
     private void Die()
     {
         // Handle player death (e.g., play animation, reload level)
-        animator.SetTrigger("Death");
+        
+       
         // obj.RunProceduralGeneration() ; 
         Debug.Log("Player Died");
         currentHealth = maxHealth;
         obj.GenerateDungeon();
+        // foreach(GameObject ob in RoomFirstDungeonGenerator.instantiatedItems){
+        //     Destroy(ob);
+        //     RoomFirstDungeonGenerator.instantiatedItems.Remove(ob);
+
+        // }
 
     }
     // public void ReloadGame(){

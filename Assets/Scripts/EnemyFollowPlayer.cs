@@ -9,8 +9,12 @@ public class EnemyFollowPlayer : MonoBehaviour
     private Transform playerTransform;
     private Rigidbody2D rb;
     protected GameObject player ;
+    Animation animator ; 
+    Animator animator1 ; 
+    
     void Start()
     {
+        animator1 = GetComponent<Animator>() ;
         rb = GetComponent<Rigidbody2D>();
        player = GameObject.FindWithTag("Player") ; 
         if (player != null)
@@ -33,8 +37,8 @@ public class EnemyFollowPlayer : MonoBehaviour
             if (distanceToPlayer > stoppingDistanceNear && distanceToPlayer <= stoppingDistanceFar)
             {
                 Vector2 direction = (playerTransform.position - transform.position).normalized;
-
                 // Move the enemy using Rigidbody2D
+                animator1.SetTrigger("isMoving") ; 
                 rb.velocity = direction * speed;
             }
             else

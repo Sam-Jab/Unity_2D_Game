@@ -5,7 +5,7 @@ using UnityEngine;
 public class Coin : MonoBehaviour
 {
     [SerializeField]
-    private int value  ; 
+    private int value = 0   ; 
     private bool hasTriggered ;
     private CoinManager coinManager ; 
     private void Start(){

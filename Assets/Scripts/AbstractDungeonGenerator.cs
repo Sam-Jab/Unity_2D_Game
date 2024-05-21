@@ -11,6 +11,12 @@ public abstract class AbstractDungeonGenerator : MonoBehaviour
     protected Vector2Int startPosition = Vector2Int.zero ; 
     public void GenerateDungeon(){
         tileMapVisualizer.Clear() ; 
+        // foreach(GameObject o in RoomFirstDungeonGenerator.instantiatedItems){
+        //     Destroy(o);
+        // }
+        // RoomFirstDungeonGenerator.instantiatedItems.Clear();
+
+        
         RunProceduralGeneration() ; 
     }
 

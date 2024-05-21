@@ -7,6 +7,7 @@ public class Enemy : MonoBehaviour
 
     // public PlayerControler player ; 
     public int damage = 1;
+    EnemyFollowPlayer enemyFollowPlayer ; 
      Animator animator;
 
     public float Health {
