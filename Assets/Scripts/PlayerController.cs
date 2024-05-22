@@ -39,8 +39,10 @@ public class PlayerControler : MonoBehaviour
         if (currentHealth <= 0)
         {
             animator.SetTrigger("Death");
+            
             // StartWaiting() ; 
             // obj.DestroyItems();
+            Die() ; 
         }
     }
     private void Die()

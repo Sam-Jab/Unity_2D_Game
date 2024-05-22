@@ -71,6 +71,7 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
 
         List<Vector2Int> roomCentersForCorridors = new List<Vector2Int>(roomCenters);
         HashSet<Vector2Int> corridors = ConnectRooms(roomCentersForCorridors);
+        corridors = IncreaseCorridorSize(corridors);
         floor.UnionWith(corridors);
 
         tileMapVisualizer.PaintFloorTiles(floor);
@@ -260,5 +261,22 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
             }
         }
         return floor;
+    }
+
+
+    private HashSet<Vector2Int> IncreaseCorridorSize(HashSet<Vector2Int> corridors)
+    {
+        HashSet<Vector2Int> enlargedCorridors = new HashSet<Vector2Int>();
+        foreach (var corridorTile in corridors)
+        {
+            for (int x = 0; x <= 1; x++)
+            {
+                for (int y = 0; y <= 1; y++)
+                {
+                    enlargedCorridors.Add(corridorTile + new Vector2Int(x, y));
+                }
+            }
+        }
+        return enlargedCorridors;
     }
 }
