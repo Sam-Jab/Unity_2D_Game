@@ -8,6 +8,7 @@ using UnityEngine.PlayerLoop;
 public class PlayerControler : MonoBehaviour
 {
     public int maxHealth = 10;
+    private CoinManager coinManager ; 
     public int currentHealth;
     public float moveSpeed = 1f; //we do it public so we can modify it just from unity without code 
     public float collisionOffset = 0.05f;
@@ -30,6 +31,7 @@ public class PlayerControler : MonoBehaviour
         animator = GetComponent<Animator>();
         spriterenderer = GetComponent<SpriteRenderer>();
         currentHealth = maxHealth;
+        
     }
 
     public void TakeDamage(int damage)
@@ -39,32 +41,17 @@ public class PlayerControler : MonoBehaviour
         if (currentHealth <= 0)
         {
             animator.SetTrigger("Death");
-            
-            // StartWaiting() ; 
-            // obj.DestroyItems();
             Die() ; 
         }
     }
     private void Die()
     {
-        // Handle player death (e.g., play animation, reload level)
-        
-       
-        // obj.RunProceduralGeneration() ; 
         Debug.Log("Player Died");
         currentHealth = maxHealth;
         obj.GenerateDungeon();
-        // foreach(GameObject ob in RoomFirstDungeonGenerator.instantiatedItems){
-        //     Destroy(ob);
-        //     RoomFirstDungeonGenerator.instantiatedItems.Remove(ob);
-
-        // }
-
+        // coinManager.coins = 0 ; 
+       
     }
-    // public void ReloadGame(){
-    //     obj
-    // }
-
     public void FixedUpdate()
     {
         if (canMove)

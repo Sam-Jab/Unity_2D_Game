@@ -9,7 +9,6 @@ public class EnemyFollowPlayer : MonoBehaviour
     private Transform playerTransform;
     private Rigidbody2D rb;
     protected GameObject player ;
-    Animation animator ; 
     Animator animator1 ; 
     
     void Start()

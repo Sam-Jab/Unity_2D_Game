@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -21,6 +22,9 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
     private GameObject enemyPrefab;
     [SerializeField]
     private GameObject coinPrefab;
+
+     [SerializeField]
+    private GameObject BossPrefab;
     [SerializeField]
     public GameObject[] itemPrefabs;
 
@@ -29,12 +33,12 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
 
     private ItemPlacementHelper itemPlacementHelper;
 
-    
+    private Dictionary<Vector2Int, List<Vector2Int>> graph;
     protected override void RunProceduralGeneration()
     {
         
         CreateRooms();
-        PlacePlayer(playerPrefab);
+        // PlaceBoss(playerStartPosition , BossPrefab) ; 
     }
 
     private void CreateRooms()
@@ -74,12 +78,16 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
         corridors = IncreaseCorridorSize(corridors);
         floor.UnionWith(corridors);
 
+        // BuildGraph(roomCenters , corridors);
+
         tileMapVisualizer.PaintFloorTiles(floor);
         WallGenerator.CreateWalls(floor, tileMapVisualizer);
 
         itemPlacementHelper = new ItemPlacementHelper(floor, corridors);
         PlaceEnemies(roomCenters);
         PlaceCoins(roomCenters);
+        Vector2Int playerPosition = PlacePlayer(playerPrefab , roomCenters) ; 
+        PlaceBoss(playerPosition, BossPrefab , roomsList ) ; 
     }
 
     private void PlaceEnemies(List<Vector2Int> roomCenters)
@@ -104,11 +112,6 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
 
     public void DestroyItems()
     {
-        // foreach (GameObject item in instantiatedItems)
-        // {
-        //     DestroyImmediate(item);
-        //     // Destroy(item) ; 
-        // }
 
         instantiatedItems.Clear();
 
@@ -131,7 +134,7 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
 
     }
 
-    private void PlacePlayer(GameObject player)
+    private Vector2Int PlacePlayer(GameObject player , List<Vector2Int> roomCenters )
     {
         if (itemPlacementHelper == null)
         {
@@ -143,8 +146,68 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
         if (itemPosition != null && player != null)
         {
             player.transform.position = itemPosition.Value;
+            // return Vector2Int.RoundToInt(itemPosition.Value) ; 
+        }
+
+        Vector2Int playerPosition = Vector2Int.RoundToInt(itemPosition.Value) ;
+        
+        Vector2Int closestRoomCenter = Vector2Int.zero;
+        
+        float minDistance = 10f ;
+
+        foreach (var roomCenter in roomCenters)
+        {
+            float distance = Vector2Int.Distance(playerPosition, roomCenter);
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                closestRoomCenter = roomCenter;
+            }
+    }
+    return closestRoomCenter;
+    }
+
+    private void PlaceBoss(Vector2Int playerStartPosition, GameObject boss , List<BoundsInt> roomsList)
+    {
+        if (itemPlacementHelper == null)
+        {
+            itemPlacementHelper = new ItemPlacementHelper(floor, corridors);
+        }
+
+        List<Vector2Int> roomCenters = new List<Vector2Int>();
+        foreach (var room in roomsList)
+        {
+            var roomCenter = (Vector2Int)Vector3Int.RoundToInt(room.center);
+            roomCenters.Add(roomCenter);
+        }
+
+        Vector2Int farthestRoomCenter = GetFarthestRoom(playerStartPosition , roomCenters);
+
+        if (boss != null)
+        {
+            boss.transform.position = new Vector3(farthestRoomCenter.x, farthestRoomCenter.y, 0);
         }
     }
+
+ private Vector2Int GetFarthestRoom(Vector2Int playerStartPosition, List<Vector2Int> roomCenters)
+    {
+        Vector2Int farthestRoom = Vector2Int.zero;
+        float maxDistance = 0f;
+
+        foreach (Vector2Int roomCenter in roomCenters)
+        {
+            float distance = Vector2Int.Distance(playerStartPosition, roomCenter);
+            if (distance > maxDistance)
+            {
+                maxDistance = distance;
+                farthestRoom = roomCenter;
+            }
+        }
+
+        return farthestRoom;
+    }
+
+
 
     private void PlaceItemsInOpenSpace(GameObject obj)
     {

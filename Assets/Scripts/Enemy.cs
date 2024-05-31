@@ -48,15 +48,6 @@ public class Enemy : MonoBehaviour
             player.TakeDamage(damage);
         }
     }
-    //  private  void OnTriggerEnter2D(Collider2D other)
-    // {
-    //     if(other.tag == "Player" ){
-    //         //Deal Damage to the Player 
-    //         PlayerControler player = other.GetComponent<PlayerControler>() ; 
-    //         if(player != null){
-    //             player.TakeDamage(damage) ; 
-    //         }
-    //     }
-    // }
+
 
 }

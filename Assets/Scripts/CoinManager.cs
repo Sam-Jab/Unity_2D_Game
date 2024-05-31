@@ -6,7 +6,7 @@ using UnityEngine;
 public class CoinManager : MonoBehaviour
 {
     public static CoinManager Instance;
-    private int coins;
+    public int coins;
     [SerializeField]
     private TMP_Text coinDisplay;
 
