@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System.Linq;
 
 public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
 {
@@ -129,7 +130,7 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
         }
         
         }catch{
-
+            Debug.Log("The Destroy Method is working just fine !!") ; 
         }
 
     }
@@ -167,45 +168,153 @@ public class RoomFirstDungeonGenerator : SimpleRandomWalkMapGenerator
     return closestRoomCenter;
     }
 
-    private void PlaceBoss(Vector2Int playerStartPosition, GameObject boss , List<BoundsInt> roomsList)
+    public class Graph
+{
+    private Dictionary<Vector2Int, List<KeyValuePair<Vector2Int, float>>> adjacencyList;
+
+    public Graph(IEnumerable<Vector2Int> vertices)
     {
-        if (itemPlacementHelper == null)
+        adjacencyList = new Dictionary<Vector2Int, List<KeyValuePair<Vector2Int, float>>>();
+        foreach (var vertex in vertices)
         {
-            itemPlacementHelper = new ItemPlacementHelper(floor, corridors);
-        }
-
-        List<Vector2Int> roomCenters = new List<Vector2Int>();
-        foreach (var room in roomsList)
-        {
-            var roomCenter = (Vector2Int)Vector3Int.RoundToInt(room.center);
-            roomCenters.Add(roomCenter);
-        }
-
-        Vector2Int farthestRoomCenter = GetFarthestRoom(playerStartPosition , roomCenters);
-
-        if (boss != null)
-        {
-            boss.transform.position = new Vector3(farthestRoomCenter.x, farthestRoomCenter.y, 0);
+            adjacencyList[vertex] = new List<KeyValuePair<Vector2Int, float>>();
         }
     }
 
- private Vector2Int GetFarthestRoom(Vector2Int playerStartPosition, List<Vector2Int> roomCenters)
+    public void AddEdge(Vector2Int from, Vector2Int to, float weight)
     {
-        Vector2Int farthestRoom = Vector2Int.zero;
-        float maxDistance = 0f;
+        adjacencyList[from].Add(new KeyValuePair<Vector2Int, float>(to, weight));
+    }
 
-        foreach (Vector2Int roomCenter in roomCenters)
+    public List<Vector2Int> GetVertices()
+    {
+        return adjacencyList.Keys.ToList();
+    }
+
+    public List<KeyValuePair<Vector2Int, float>> GetNeighbours(Vector2Int vertex)
+    {
+        return adjacencyList.ContainsKey(vertex) ? adjacencyList[vertex] : new List<KeyValuePair<Vector2Int, float>>();
+    }
+}
+
+private void PlaceBoss(Vector2Int playerStartPosition, GameObject boss, List<BoundsInt> roomsList)
+{
+    if (itemPlacementHelper == null)
+    {
+        itemPlacementHelper = new ItemPlacementHelper(floor, corridors);
+    }
+
+    List<Vector2Int> roomCenters = new List<Vector2Int>();
+    foreach (var room in roomsList)
+    {
+        var roomCenter = (Vector2Int)Vector3Int.RoundToInt(room.center);
+        roomCenters.Add(roomCenter);
+    }
+
+    Graph roomGraph = CreateRoomGraph(roomCenters);
+    Vector2Int farthestRoomCenter = GetFarthestRoomUsingDijkstra(playerStartPosition, roomGraph);
+
+    if (boss != null)
+    {
+        boss.transform.position = new Vector3(farthestRoomCenter.x, farthestRoomCenter.y, 0);
+    }
+}
+
+private Graph CreateRoomGraph(List<Vector2Int> roomCenters)
+{
+    Graph graph = new Graph(roomCenters);
+
+    foreach (var roomCenter in roomCenters)
+    {
+        foreach (var neighbor in roomCenters)
         {
-            float distance = Vector2Int.Distance(playerStartPosition, roomCenter);
-            if (distance > maxDistance)
+            if (roomCenter != neighbor)
             {
-                maxDistance = distance;
-                farthestRoom = roomCenter;
+                float distance = Vector2Int.Distance(roomCenter, neighbor);
+                graph.AddEdge(roomCenter, neighbor, distance);
+                graph.AddEdge(neighbor, roomCenter, distance);
             }
         }
-
-        return farthestRoom;
     }
+
+    return graph;
+}
+
+private Vector2Int GetFarthestRoomUsingDijkstra(Vector2Int start, Graph graph)
+{
+    var distances = new Dictionary<Vector2Int, float>();
+    var previous = new Dictionary<Vector2Int, Vector2Int>();
+    var unvisited = new HashSet<Vector2Int>(graph.GetVertices());
+
+    foreach (var vertex in unvisited)
+    {
+        distances[vertex] = float.MaxValue;
+    }
+
+    distances[start] = 0;
+
+    while (unvisited.Count > 0)
+    {
+        Vector2Int current = unvisited.OrderBy(vertex => distances[vertex]).First();
+        unvisited.Remove(current);
+
+        foreach (var neighbor in graph.GetNeighbours(current))
+        {
+            float tentativeDistance = distances[current] + neighbor.Value;
+
+            if (tentativeDistance < distances[neighbor.Key])
+            {
+                distances[neighbor.Key] = tentativeDistance;
+                previous[neighbor.Key] = current;
+            }
+        }
+    }
+
+    return distances.OrderByDescending(kv => kv.Value).First().Key;
+}
+
+
+
+
+    // private void PlaceBoss(Vector2Int playerStartPosition, GameObject boss , List<BoundsInt> roomsList)
+    // {
+    //     if (itemPlacementHelper == null)
+    //     {
+    //         itemPlacementHelper = new ItemPlacementHelper(floor, corridors);
+    //     }
+
+    //     List<Vector2Int> roomCenters = new List<Vector2Int>();
+    //     foreach (var room in roomsList)
+    //     {
+    //         var roomCenter = (Vector2Int)Vector3Int.RoundToInt(room.center);
+    //         roomCenters.Add(roomCenter);
+    //     }
+
+    //     Vector2Int farthestRoomCenter = GetFarthestRoom(playerStartPosition , roomCenters);
+
+    //     if (boss != null)
+    //     {
+    //         boss.transform.position = new Vector3(farthestRoomCenter.x, farthestRoomCenter.y, 0);
+    //     }
+    // }
+
+//  private Vector2Int GetFarthestRoom(Vector2Int playerStartPosition, List<Vector2Int> roomCenters)
+//     {
+//         Vector2Int farthestRoom = Vector2Int.zero;
+//         float maxDistance = 0f;
+
+//         foreach (Vector2Int roomCenter in roomCenters)
+//         {
+//             float distance = Vector2Int.Distance(playerStartPosition, roomCenter);
+//             if (distance > maxDistance)
+//             {
+//                 maxDistance = distance;
+//                 farthestRoom = roomCenter;
+//             }
+//         }
+
+//         return farthestRoom;
+//     }
 
 
 
